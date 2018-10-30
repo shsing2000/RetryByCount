@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements. See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License. You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.nifi</groupId>
+        <artifactId>nifi-nar-bundles</artifactId>
+        <version>1.8.0</version>
+    </parent>
+
+    <groupId>com.samhsing.nifi</groupId>
+    <artifactId>retry-by-count-processor</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.min-version>3.1.0</maven.min-version>
+        <maven.surefire.arguments />
+        <org.slf4j.version>1.7.25</org.slf4j.version>
+    </properties>
+
+    <modules>
+        <module>nifi-retrybycount-processors</module>
+        <module>nifi-retrybycount-nar</module>
+    </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <fork>true</fork>
+                        <optimize>true</optimize>
+                        <showDeprecation>true</showDeprecation>
+                        <showWarnings>true</showWarnings>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.21.0</version>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <java.awt.headless>true</java.awt.headless>
+                        </systemPropertyVariables>
+                        <includes>
+                            <include>**/*Test.class</include>
+                            <include>**/Test*.class</include>
+                            <include>**/*Spec.class</include>
+                        </includes>
+                        <excludes>
+                            <exclude>**/*ITSpec.class</exclude>
+                        </excludes>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <argLine combine.children="append">-Xmx1G
+                            -Djava.net.preferIPv4Stack=true
+                            ${maven.surefire.arguments}
+                            -Dfile.encoding=UTF-8</argLine>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <!-- Force surefire to use JUnit -->
+                            <groupId>org.apache.maven.surefire</groupId>
+                            <artifactId>surefire-junit4</artifactId>
+                            <version>${surefire.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>enforce-maven</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <requireSameVersions>
+                                        <plugins>
+                                            <plugin>org.apache.maven.plugins:maven-surefire-plugin</plugin>
+                                            <plugin>org.apache.maven.plugins:maven-failsafe-plugin</plugin>
+                                            <plugin>org.apache.maven.plugins:maven-surefire-report-plugin</plugin>
+                                        </plugins>
+                                    </requireSameVersions>
+                                    <requireMavenVersion>
+                                        <version>${maven.min-version}</version>
+                                    </requireMavenVersion>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
