@@ -17,6 +17,7 @@
 package com.samhsing.nifi.processors;
 
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.PropertyValue;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
 import org.apache.nifi.annotation.behavior.ReadsAttributes;
@@ -54,8 +55,9 @@ public class RetryByCountProcessor extends AbstractProcessor {
         .displayName("Counter Attribute")
         .description("Attribute to check/store the current retry count")
         .required(true)
+        .defaultValue("retry.counter")
         .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
-        .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+        .expressionLanguageSupported(ExpressionLanguageScope.NONE)
         .build();
 
     public static final PropertyDescriptor COUNTER_MAX_LIMIT = new PropertyDescriptor
@@ -106,9 +108,8 @@ public class RetryByCountProcessor extends AbstractProcessor {
         return this.descriptors;
     }
 
-    @OnScheduled
-    public void onScheduled(final ProcessContext context) {
-        // No Action
+    private int parseWithDefault(String s, int defaultValue) {
+        return s.matches("\\d+") ? Integer.parseInt(s) : defaultValue;
     }
 
     @Override
@@ -118,14 +119,20 @@ public class RetryByCountProcessor extends AbstractProcessor {
             return;
         }
 
-        final String attrName = context.getProperty(COUNTER_ATTR_NAME).evaluateAttributeExpressions().getValue();
-        final int currentCount = context.getProperty(attrName).evaluateAttributeExpressions().asInteger();
-        final int maxLimit = context.getProperty(COUNTER_MAX_LIMIT).asInteger();
+        try {
+            final String attrName = context.getProperty(COUNTER_ATTR_NAME).getValue();
+            final int maxLimit = context.getProperty(COUNTER_MAX_LIMIT).asInteger();
+            int currentCount = flowFile.getAttribute(attrName) == null ? 0 : parseWithDefault(flowFile.getAttribute(attrName), 0);
 
-        if (currentCount < maxLimit) {
-            session.putAttribute(flowFile, attrName, Integer.toString(currentCount + 1));
-            session.transfer(flowFile, RETRY);
-        } else {
+            if (currentCount < maxLimit) {
+                session.putAttribute(flowFile, attrName, Integer.toString(currentCount + 1));
+                session.transfer(flowFile, RETRY);
+            } else {
+                session.transfer(flowFile, FAILURE);
+            }
+        } catch (final Exception ex) {
+            getLogger().error("Failed to process retry count for {}, routing to failure", new Object[]{flowFile, ex});
+            flowFile = session.penalize(flowFile);
             session.transfer(flowFile, FAILURE);
         }
     }
