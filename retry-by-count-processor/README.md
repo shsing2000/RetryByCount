@@ -1,0 +1,2 @@
+# Retry By Count Processor
+This is an example processor that can be used to retry processing. For a given FlowFile, the processor will evaluate a FlowFile attribute to determine the current execution count. The processor will compare that value to the allowed limit and route the FlowFile to the Retry or Failure relationships, based on whether the current count is less than the limit or not, respectively. The source processor is expected to penalize the FlowFile per desired backoff strategy.

@@ -17,15 +17,12 @@
 package com.samhsing.nifi.processors;
 
 import org.apache.nifi.components.PropertyDescriptor;
-import org.apache.nifi.components.PropertyValue;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
 import org.apache.nifi.annotation.behavior.ReadsAttributes;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.behavior.WritesAttributes;
-import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
-import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.processor.exception.ProcessException;
@@ -43,10 +40,13 @@ import java.util.List;
 import java.util.Set;
 
 @Tags({"retry"})
-@CapabilityDescription("")
-@SeeAlso({})
-@ReadsAttributes({@ReadsAttribute(attribute="", description="")})
-@WritesAttributes({@WritesAttribute(attribute="", description="")})
+@CapabilityDescription("Check a FlowFile attribute to determine whether to route to Retry or Failure relationships. " +
+    "The attribute value is compared to a max limit. When the attribute value is less than the limit, the attribute " +
+    "is incremented, and the FlowFile is routed to Retry. Otherwise, the FlowFile is routed to Failure.")
+@ReadsAttributes({
+    @ReadsAttribute(attribute="Counter Attribute", description="FlowFile attribute name to store retry counter"),
+    @ReadsAttribute(attribute="Counter Limit", description="Max number of retries before routing to Failure")})
+@WritesAttributes({@WritesAttribute(attribute="Counter Attribute", description="FlowFile attribute to store retry counter")})
 public class RetryByCountProcessor extends AbstractProcessor {
 
     public static final PropertyDescriptor COUNTER_ATTR_NAME = new PropertyDescriptor
@@ -72,12 +72,12 @@ public class RetryByCountProcessor extends AbstractProcessor {
         .build();
 
     public static final Relationship RETRY = new Relationship.Builder()
-        .name("RETRY")
+        .name("Retry")
         .description("Retry the request")
         .build();
 
     public static final Relationship FAILURE = new Relationship.Builder()
-        .name("FAILURE")
+        .name("Failure")
         .description("Retry limit reached")
         .build();
 

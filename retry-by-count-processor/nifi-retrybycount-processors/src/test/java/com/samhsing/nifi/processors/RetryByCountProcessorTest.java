@@ -49,19 +49,28 @@ public class RetryByCountProcessorTest {
         Assert.assertTrue(descriptors.contains(RetryByCountProcessor.COUNTER_MAX_LIMIT));
     }
 
+    /**
+     * Verify that the processor will use default values
+     * for the counter attribute name and max counter limit.
+     */
     @Test
-    public void defaultValuesShouldBeReasonable() {
+    public void defaultValuesShouldBeApplied() {
         testRunner.enqueue(new byte[0]);
         testRunner.run(1);
 
         testRunner.assertAllFlowFilesTransferred(RetryByCountProcessor.RETRY, 1);
-        final List<MockFlowFile> flowfiles = testRunner.getFlowFilesForRelationship(RetryByCountProcessor.RETRY);
-        MockFlowFile flowfile = flowfiles.get(0);
-        flowfile.assertAttributeEquals("retry.counter", "1");
+        final List<MockFlowFile> flowFiles = testRunner.getFlowFilesForRelationship(RetryByCountProcessor.RETRY);
+        MockFlowFile flowFile = flowFiles.get(0);
+        flowFile.assertAttributeEquals("retry.counter", "1");
     }
 
+    /**
+     * Verify that specified attribute name and max limit are
+     * utilized by the processor. Set attribute name to `retry.test.counter`
+     * and set max limit to 5.
+     */
     @Test
-    public void FlowFileWithAttirbute() {
+    public void suppliedAttributesShouldBeApplied() {
         testRunner.setProperty(RetryByCountProcessor.COUNTER_ATTR_NAME, "retry.test.counter");
         testRunner.setProperty(RetryByCountProcessor.COUNTER_MAX_LIMIT, "5");
         final Map<String, String> attrs = new HashMap<>();
@@ -70,14 +79,46 @@ public class RetryByCountProcessorTest {
         testRunner.run(1);
 
         testRunner.assertAllFlowFilesTransferred(RetryByCountProcessor.RETRY, 1);
+        final List<MockFlowFile> flowFiles = testRunner.getFlowFilesForRelationship(RetryByCountProcessor.RETRY);
+        MockFlowFile flowFile = flowFiles.get(0);
+        flowFile.assertAttributeEquals("retry.test.counter", "4");
     }
 
-    public void AttributeIsOverTheLimit() {
+    /**
+     * Verify that counts over the specified limit should
+     * route the FlowFile to relationship FAILURE.
+     */
+    @Test
+    public void countOverTheLimitShouldRouteToFailure() {
+        testRunner.setProperty(RetryByCountProcessor.COUNTER_ATTR_NAME, "retry.test.counter");
+        testRunner.setProperty(RetryByCountProcessor.COUNTER_MAX_LIMIT, "5");
+        final Map<String, String> attrs = new HashMap<>();
+        attrs.put("retry.test.counter", "5");
+        testRunner.enqueue(new byte[0], attrs);
+        testRunner.run(1);
 
+        testRunner.assertAllFlowFilesTransferred(RetryByCountProcessor.FAILURE, 1);
+        final List<MockFlowFile> flowFiles = testRunner.getFlowFilesForRelationship(RetryByCountProcessor.FAILURE);
+        MockFlowFile flowFile = flowFiles.get(0);
+        flowFile.assertAttributeEquals("retry.test.counter", "5");
     }
 
-    public void AttributeIsUnderTheLimit() {
+    /**
+     * Verify that counts under the specified limit should
+     * route the FlowFile to relationship RETRY.
+     */
+    @Test
+    public void countUnderTheLimitShouldRouteToRetry() {
+        testRunner.setProperty(RetryByCountProcessor.COUNTER_ATTR_NAME, "retry.test.counter");
+        testRunner.setProperty(RetryByCountProcessor.COUNTER_MAX_LIMIT, "5");
+        final Map<String, String> attrs = new HashMap<>();
+        testRunner.enqueue(new byte[0], attrs);
+        testRunner.run(1);
 
+        testRunner.assertAllFlowFilesTransferred(RetryByCountProcessor.RETRY, 1);
+        final List<MockFlowFile> flowFiles = testRunner.getFlowFilesForRelationship(RetryByCountProcessor.RETRY);
+        MockFlowFile flowFile = flowFiles.get(0);
+        flowFile.assertAttributeEquals("retry.test.counter", "1");
     }
 
 }
