@@ -38,6 +38,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
+            <artifactId>nifi-lookup-service-api</artifactId>
+            <version>1.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-mock</artifactId>
             <version>1.8.0</version>
             <scope>test</scope>
@@ -53,12 +58,18 @@
             <scope>test</scope>
             <version>4.12</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.nifi</groupId>
+            <artifactId>nifi-scripting-processors</artifactId>
+            <scope>test</scope>
+            <version>1.8.0</version>
+        </dependency>
     </dependencies>
 
      <build>
          <testResources>
             <testResource>
-                <directory>${project.basedir}/src/main/scripts</directory>
+                <directory>${project.basedir}/src/main/resources/scripts</directory>
             </testResource>
         </testResources>
     </build>
