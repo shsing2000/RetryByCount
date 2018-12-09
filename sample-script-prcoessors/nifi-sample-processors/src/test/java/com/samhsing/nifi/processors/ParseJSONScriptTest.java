@@ -1,5 +1,7 @@
 package com.samhsing.nifi.processors;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.nifi.processors.script.ExecuteScript;
 import org.apache.nifi.script.ScriptingComponentHelper;
 import org.apache.nifi.script.ScriptingComponentUtils;
@@ -9,7 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-public class BasicScriptTest {
+public class ParseJSONScriptTest {
 
     private TestRunner testRunner;
     private ScriptingComponentHelper scHelper;
@@ -25,9 +27,9 @@ public class BasicScriptTest {
     @Test
     public void testProcessor() {
         testRunner.setProperty(scHelper.SCRIPT_ENGINE, "ECMAScript");
-        testRunner.setProperty(ScriptingComponentUtils.SCRIPT_FILE, "target/classes/scripts/BasicScript.js");
+        testRunner.setProperty(ScriptingComponentUtils.SCRIPT_FILE, "target/classes/scripts/ParseJSONScript.js");
         testRunner.assertValid();
-        testRunner.enqueue(new byte[0]);
+        testRunner.enqueue("{}".getBytes(StandardCharsets.UTF_8));
         testRunner.run();
         testRunner.assertAllFlowFilesTransferred("success", 1);
     }
